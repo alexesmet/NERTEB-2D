@@ -57,7 +57,7 @@ impl ggez::event::EventHandler for State {
         // https://docs.rs/ggez/0.5.1/ggez/event/trait.EventHandler.html
         match keycode {
             KeyCode::W => println!("W was pressed..."),
-            _ => unimplemented!(),
+            _ => (),
         }
     }
 }
