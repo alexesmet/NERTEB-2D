@@ -14,7 +14,6 @@ struct State {
 }
 
 impl ggez::event::EventHandler for State {
-
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         while ggez::timer::check_update_time(ctx, conf::FPS) {
             // Here, items from State should be updated.
@@ -41,7 +40,7 @@ impl ggez::event::EventHandler for State {
 
         let draw_params = graphics::DrawParam::new()        // This describes the __POSITION__ of created mesh
                 .dest([50.0, 60.0])                         // coordinates of center on screen
-                .rotation(PI/6.0)                           // rotation around the center of the mesh
+                .rotation(PI / 6.0)                           // rotation around the center of the mesh
                 .scale([1.5, 2.0]);
 
         graphics::draw(ctx, &rectangle, draw_params)?;      // Draw the resulting mesh on the screen
@@ -57,8 +56,8 @@ impl ggez::event::EventHandler for State {
         // There are also other kyeboard and mouse functions, see:
         // https://docs.rs/ggez/0.5.1/ggez/event/trait.EventHandler.html
         match keycode {
-            KeyCode::W => { println!("W was pressed..."); }
-            _ => (), // Do nothing
+            KeyCode::W => println!("W was pressed..."),
+            _ => (),
         }
     }
 }
