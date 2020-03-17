@@ -6,6 +6,7 @@ use std::f32::consts::PI;
 use ggez::mint::Point2;
 use ggez::input::mouse::MouseButton;
 use core::ops;
+use std::rc::Rc;
 
 mod conf {
     pub const FPS: u32 = 60;
@@ -98,25 +99,52 @@ impl ops::MulAssign<f64> for Xy {
 
 struct Movable {
 	coordinates : Xy,
-	acceleration_vector : Xy,
 	movement_vector : Xy,
-	braking_coefficient : f64, //the more the faster brakes are: [0, 1] -> 0 - no braking, 1 - no movement
+	acceleration_vector : Xy,
+	braking_coefficient : f64
 }
 
 impl Movable {
 	fn move0(&mut self) -> & Self {
 		self.movement_vector += self.acceleration_vector;
 		self.movement_vector *= 1 as f64 - self.braking_coefficient;
-		self.coordinates += self.movement_vector;
+		self.coordinates     += self.movement_vector;
 		return self;
 	}
 }
 
+struct Line {
+	points : (Rc<Xy>, Rc<Xy>)
+}
+
 struct State {
     // Here we will find the map, player, etc.
+    points : Vec<Rc<Xy>>,
+    lines : Vec<Line>,
 	coordinates_mouse : Xy,
 	object : Movable,
 }
+
+impl Line {
+	fn from_points(points : & Vec<Rc<Xy>>, index1 : usize, index2 : usize) -> Self {
+		return Line { points : (Rc::clone(&points[index1]), Rc::clone(&points[index2]))};
+	}
+	fn draw(& self, ctx: &mut Context) -> GameResult {
+		let line = graphics::Mesh::new_line(
+			ctx,
+			&[*self.points.0, *self.points.1],
+			1 as f32,
+			[0.0, 0.0, 0.0, 1.0].into()
+		)?;
+		let draw_params = graphics::DrawParam::new();
+			//.dest(Xy(80, 80));
+		graphics::draw(ctx, &line, draw_params)?;
+		return Ok(());
+	}
+}
+
+
+
 
 impl ggez::event::EventHandler for State {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
@@ -130,12 +158,18 @@ impl ggez::event::EventHandler for State {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+    	
         graphics::clear(ctx, [0.6, 0.6, 0.6, 0.6].into());
 
         // Here the rendering happens.
         // You can access State fields by `this.field`
 
         // Example of drawing a rectangle.
+
+        for line in self.lines.iter() {
+    		line.draw(ctx)?;
+    	}
+
 		let circle = graphics::Mesh::new_circle(
 			ctx,
 			graphics::DrawMode::fill(),
@@ -145,11 +179,11 @@ impl ggez::event::EventHandler for State {
 			[1.0, 1.0, 1.0, 1.0].into()
 
 		)?;
+		
 		let draw_params_circle = graphics::DrawParam::new()        // This describes the __POSITION__ of created mesh
 			.dest(self.object.coordinates);
 
 		graphics::draw(ctx, &circle, draw_params_circle)?;
-
 		graphics::present(ctx)?;                            // Something that helps timer to work
         ggez::timer::yield_now();                           // ...nevermind
         return Ok(());
@@ -184,7 +218,20 @@ fn main() -> GameResult {
         .build()?;
 
     // create the world (can be loaded from file or whatever)
+    let points = vec![
+    	Rc::new(Xy::new(50, 50)),
+    	Rc::new(Xy::new(100, 50)),
+    	Rc::new(Xy::new(100, 100)),
+    	Rc::new(Xy::new(50, 100))
+    ];
     let mut state = State {
+    	lines : vec![
+    		Line::from_points(&points, 0, 1),
+    		Line::from_points(&points, 1, 2),
+    		Line::from_points(&points, 2, 3),
+    		Line::from_points(&points, 3, 0),
+    	],
+    	points : points,
 		coordinates_mouse: Xy::new(0, 0),
 		object: Movable {
 			coordinates: Xy(100, 100),
